@@ -1,0 +1,10 @@
+Map:
+  Dimensions:
+  - 10
+  - 10
+  Obstacles:
+    obstacle0:
+    - 4
+    - 3
+    - 6
+    - 10
