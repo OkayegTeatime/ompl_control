@@ -65,8 +65,8 @@ public:
         const double theta = compState->as<ob::SO2StateSpace::StateType>(1)->value;
 
         // Get important params from car object
-        const double carWidth = a_->getShape()[0];
-        const double carHeight = a_->getShape()[1];
+        const double carWidth = a_->getShape()[0]*1.2;
+        const double carHeight = a_->getShape()[1]*1.2;
 
         // turn (x,y, theta), width, length to a polygon object
         // see https://stackoverflow.com/questions/41898990/find-corners-of-a-rotated-rectangle-given-its-center-point-and-rotation
@@ -93,9 +93,9 @@ public:
         boost::geometry::read_wkt(points,agent);
         
         // check agent is disjoint from all obstacles
-        for (Obstacle o: w_->getObstacles())
+        for (polygon poly: w_->getPolygons())
         {
-            if (! boost::geometry::disjoint(agent, o.poly_))
+            if (! boost::geometry::disjoint(agent, poly))
                 return false;
         }
         return true;

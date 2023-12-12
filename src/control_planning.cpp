@@ -24,7 +24,7 @@ oc::SimpleSetupPtr controlSimpleSetUp(const World *w)
     Agent *a = w->getAgents()[0];
 
     // create state and control spaces
-    ob::StateSpacePtr space = createBounded2ndOrderCarStateSpace(w->getWorldDimensions()[0], w->getWorldDimensions()[1]);
+    ob::StateSpacePtr space = createBounded2ndOrderCarStateSpace(w->getWorldDimensions());
     oc::ControlSpacePtr cspace = createUniform2DRealVectorControlSpace(space);
 
     // define a simple setup class

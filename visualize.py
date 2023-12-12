@@ -67,3 +67,6 @@ if __name__ == '__main__':
         ax.add_patch(patch)
     ax.plot(x_pts, y_pts)
     plt.show()
+
+# ros2 launch ompl_control all.launch.py
+# ros2 launch sim_car all.launch.py

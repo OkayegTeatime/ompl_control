@@ -82,6 +82,8 @@ class Agent {
         std::vector<double> getShape() const {return shape_;};
         std::vector<double> getStartLocation() const {return start_;};
         std::vector<double> getGoalLocation() const {return goal_;};
+        void setStartLocation(const std::vector<double>& start) {start_ = start;};
+        void setGoalLocation(const std::vector<double>& goal) {goal_ = goal;};
     private:
         std::string name_;
         std::string dynamics_;
@@ -97,12 +99,15 @@ class World {
     public:
         World(){}
         // methods for dimensions
-        void setWorldDimensions(int x, int y){xDim_ = x; yDim_ = y;};
-        std::vector<double> getWorldDimensions() const {return {xDim_, yDim_};};
-        void printWorldDimensions(){OMPL_INFORM("Space Dimensions: [%0.2f, %0.2f]", xDim_, yDim_);}
+        void setWorldDimensions(const std::vector<double>& dim) {dimensions = dim;};
+        std::vector<double> getWorldDimensions() const {return dimensions;};
+        void printWorldDimensions(){OMPL_INFORM("Space Dimensions: [%0.2f, %0.2f, %0.2f, %0.2f]", dimensions[0], dimensions[1], dimensions[2], dimensions[3] );}
         // methods for obstacles
         void addObstacle(Obstacle obs){Obstacles_.push_back(obs);};
         std::vector<Obstacle> getObstacles() const {return Obstacles_;};
+        void addPolygon(polygon poly){polygons_.push_back(poly);};
+        std::vector<polygon> getPolygons() const {return polygons_;};
+
         // methods for agents
         void addAgent(Agent *a){Agents_.push_back(a);};
         std::vector<Agent*> getAgents() const {return Agents_;};
@@ -123,84 +128,85 @@ class World {
             }
         }
         void printWorld() {
-            OMPL_INFORM("Map Dimensions: [%0.2f, %0.2f]", getWorldDimensions()[0], getWorldDimensions()[1]);
+            OMPL_INFORM("Map Dimensions: [%0.2f, %0.2f, %0.2f, %0.2f]", getWorldDimensions()[0], getWorldDimensions()[1], getWorldDimensions()[2], getWorldDimensions()[3]);
             printObstacles();
             printAgents();
         }
+        void clearObstacles() {
+            Obstacles_.clear();
+            polygons_.clear();
+        }
     private:
-        double xDim_{0};
-        double yDim_{0};
+        std::vector<double> dimensions;
         std::vector<Obstacle> Obstacles_;
+        std::vector<polygon> polygons_;
         std::vector<Agent*> Agents_;
 };
 
 // function that parses YAML file to world object
-World* yaml2world(std::string file) {
-    YAML::Node config;
-    World *w = new World();
-    // try {
-    //     OMPL_INFORM("Path to Problem File: %s", file.c_str());
-    //     config = YAML::LoadFile(file);
-    //     std::cout << "" << std::endl;
-    //     OMPL_INFORM("File loaded successfully. Parsing...");
-    // }
-    // catch (const std::exception& e) {
-    //     OMPL_ERROR("Invalid file path. Aborting prematurely to avoid critical error.");
-    //     exit(1);
-    // }
-    try {    
-        // grab dimensions from problem definition
-        // const auto& dims = config["Map"]["Dimensions"];
-        // const int dimx = dims[0].as<double>();
-        // const int dimy = dims[1].as<double>();
-        w->setWorldDimensions(10.0, 10.0);
-        
-        // set Obstacles
-        // const auto& obs = config["Map"]["Obstacles"];
-        for (int i=0; i < 1; i++) {
-            std::string name = "obstacle" + std::to_string(i);
-            // const double minX = obs[name][0].as<double>();
-            // const double minY = obs[name][1].as<double>();
-            // const double maxX = obs[name][2].as<double>();
-            // const double maxY = obs[name][3].as<double>();        
-            const double minX = 4.0;
-            const double minY = 3.0;
-            const double maxX = 6.0;
-            const double maxY = 10.0;            
-            // TOP RIGHT VERTEX:
-            std::string top_right = std::to_string(maxX) + " " + std::to_string(maxY);
-            // TOP LEFT VERTEX:
-            std::string top_left = std::to_string(minX) + " " + std::to_string(maxY);
-            // BOTTOM LEFT VERTEX:
-            std::string bottom_left = std::to_string(minX) + " " + std::to_string(minY);
-            // BOTTOM RIGHT VERTEX:
-            std::string bottom_right = std::to_string(maxX) + " " + std::to_string(minY);
-
-            // convert to string for easy initializataion
-            std::string points = "POLYGON((" + bottom_left + "," + bottom_right + "," + top_right + "," + top_left + "," + bottom_left + "))";
-            polygon poly;
-            boost::geometry::read_wkt(points,poly);
-            Obstacle o = {minX, minY, maxX, maxY, poly};
-            w->addObstacle(o);
-        }
-
-        // Define the agents
-        // const auto& agents = config["Agents"];
-        // for (int i=0; i < agents.size(); i++) {
-        //     std::string name = "agent" + std::to_string(i);
-        //     const std::vector<double> shape{agents[name]["Shape"][0].as<double>(), agents[name]["Shape"][1].as<double>()};
-        //     const std::vector<double> start{agents[name]["Start"][0].as<double>(), agents[name]["Start"][1].as<double>()};
-        //     const std::vector<double> goal{agents[name]["Goal"][0].as<double>(), agents[name]["Goal"][1].as<double>()};
-        //     Agent *a = new Agent(name, agents[name]["Model"].as<std::string>(), shape, start, goal);
-        //     w->addAgent(a);
-        // }
-        OMPL_INFORM("Parsing Complete.");
-        std::cout << "" << std::endl;
-        w->printWorld();
-    }
-    catch (const std::exception& e) {
-        OMPL_ERROR("Error During Parsing. Aborting prematurely to avoid critical error.");
-        exit(1);
-    }
-    return w;
-}
+// World* yaml2world(std::string file) {
+//     YAML::Node config;
+//     World *w = new World();
+//     // try {
+//     //     OMPL_INFORM("Path to Problem File: %s", file.c_str());
+//     //     config = YAML::LoadFile(file);
+//     //     std::cout << "" << std::endl;
+//     //     OMPL_INFORM("File loaded successfully. Parsing...");
+//     // }
+//     // catch (const std::exception& e) {
+//     //     OMPL_ERROR("Invalid file path. Aborting prematurely to avoid critical error.");
+//     //     exit(1);
+//     // }
+//     try {    
+//         // grab dimensions from problem definition
+//         // const auto& dims = config["Map"]["Dimensions"];
+//         // const int dimx = dims[0].as<double>();
+//         // const int dimy = dims[1].as<double>();
+//         // w->setWorldDimensions(10.0, 10.0);        
+//         // set Obstacles
+//         // const auto& obs = config["Map"]["Obstacles"];
+//         for (int i=0; i < 1; i++) {
+//             std::string name = "obstacle" + std::to_string(i);
+//             // const double minX = obs[name][0].as<double>();
+//             // const double minY = obs[name][1].as<double>();
+//             // const double maxX = obs[name][2].as<double>();
+//             // const double maxY = obs[name][3].as<double>();        
+//             const double minX = 4.0;
+//             const double minY = 3.0;
+//             const double maxX = 6.0;
+//             const double maxY = 10.0;            
+//             // TOP RIGHT VERTEX:
+//             std::string top_right = std::to_string(maxX) + " " + std::to_string(maxY);
+//             // TOP LEFT VERTEX:
+//             std::string top_left = std::to_string(minX) + " " + std::to_string(maxY);
+//             // BOTTOM LEFT VERTEX:
+//             std::string bottom_left = std::to_string(minX) + " " + std::to_string(minY);
+//             // BOTTOM RIGHT VERTEX:
+//             std::string bottom_right = std::to_string(maxX) + " " + std::to_string(minY);
+//             // convert to string for easy initializataion
+//             std::string points = "POLYGON((" + bottom_left + "," + bottom_right + "," + top_right + "," + top_left + "," + bottom_left + "))";
+//             polygon poly;
+//             boost::geometry::read_wkt(points,poly);
+//             Obstacle o = {minX, minY, maxX, maxY, poly};
+//             w->addObstacle(o);
+//         }
+//         // Define the agents
+//         // const auto& agents = config["Agents"];
+//         // for (int i=0; i < agents.size(); i++) {
+//         //     std::string name = "agent" + std::to_string(i);
+//         //     const std::vector<double> shape{agents[name]["Shape"][0].as<double>(), agents[name]["Shape"][1].as<double>()};
+//         //     const std::vector<double> start{agents[name]["Start"][0].as<double>(), agents[name]["Start"][1].as<double>()};
+//         //     const std::vector<double> goal{agents[name]["Goal"][0].as<double>(), agents[name]["Goal"][1].as<double>()};
+//         //     Agent *a = new Agent(name, agents[name]["Model"].as<std::string>(), shape, start, goal);
+//         //     w->addAgent(a);
+//         // }
+//         OMPL_INFORM("Parsing Complete.");
+//         std::cout << "" << std::endl;
+//         w->printWorld();
+//     }
+//     catch (const std::exception& e) {
+//         OMPL_ERROR("Error During Parsing. Aborting prematurely to avoid critical error.");
+//         exit(1);
+//     }
+//     return w;
+// }
